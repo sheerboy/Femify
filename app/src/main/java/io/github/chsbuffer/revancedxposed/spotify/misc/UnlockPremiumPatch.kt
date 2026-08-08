@@ -6,6 +6,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import io.github.chsbuffer.revancedxposed.callMethod
+import io.github.chsbuffer.revancedxposed.callMethodOrNull
 import io.github.chsbuffer.revancedxposed.findField
 import io.github.chsbuffer.revancedxposed.findFirstFieldByExactType
 import io.github.chsbuffer.revancedxposed.spotify.SpotifyHook
@@ -65,10 +66,11 @@ fun SpotifyHook.UnlockPremium() {
 
     // Hook the method which adds context menu items and return before adding if the item is a Premium ad.
     val contextMenuViewModelClazz = ::contextMenuViewModelClass.clazz
+    val contextMenuItemInterfaceClazz = ::contextMenuItemInterface.clazz
+    val premiumItemResIdField = ::contextMenuPremiumItemResIdField.field
+
     XposedBridge.hookAllConstructors(
         contextMenuViewModelClazz, object : XC_MethodHook() {
-            val isPremiumUpsell = ::isPremiumUpsellField.field
-
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val parameterTypes = (param.method as Constructor<*>).parameterTypes
                 Logger.printDebug { "ContextMenuViewModel(${parameterTypes.joinToString(",") { it.name }})" }
@@ -76,8 +78,10 @@ fun SpotifyHook.UnlockPremium() {
                     if (parameterTypes[i].name != "java.util.List") continue
                     val original = param.args[i] as? List<*> ?: continue
                     Logger.printDebug { "List value type: ${original.firstOrNull()?.javaClass}" }
-                    val filtered = original.filter {
-                        it!!.callMethod("getViewModel").let { isPremiumUpsell.get(it) } != true
+                    val filtered = original.filter { item ->
+                        item == null || !isPremiumUpsellItem(
+                            item, contextMenuItemInterfaceClazz, premiumItemResIdField
+                        )
                     }
                     param.args[i] = filtered
                     Logger.printDebug { "Filtered ${original.size - filtered.size} context menu items." }
@@ -121,4 +125,13 @@ fun SpotifyHook.UnlockPremium() {
 
     ::pendragonJsonFetchMessageRequestFingerprint.hookMethod(replaceFetchRequestSingleWithError)
     ::pendragonJsonFetchMessageListRequestFingerprint.hookMethod(replaceFetchRequestSingleWithError)
+}
+
+private fun isPremiumUpsellItem(item: Any, itemInterface: Class<*>, resIdField: Field): Boolean {
+    if (!itemInterface.isInstance(item)) return false
+    val data = item.callMethodOrNull("c") ?: return false
+    val resId = runCatching {
+        XposedHelpers.getObjectField(data, resIdField.name) as String
+    }.getOrNull() ?: return false
+    return resId.startsWith("premium_destination_")
 }

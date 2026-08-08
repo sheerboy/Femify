@@ -17,13 +17,6 @@ object TestSetup {
     val jadxResourceReader = ThreadLocal<JadxResourceReader>()
     val appVersion = ThreadLocal<AppVersion>()
 
-    init {
-        resourceMappings = object : ResourceFinder {
-            override operator fun get(type: String, name: String): Int =
-                jadxResourceReader.get()!![type, name]
-        }
-    }
-
     private fun setupDexKit(apkPath: String) {
         try {
             System.loadLibrary("dexkit")

@@ -56,15 +56,24 @@ val contextMenuViewModelClass = findClassDirect {
     }.declaredClass!!
 }
 
-val viewModelClazz = findClassDirect {
+val contextMenuPremiumItemResIdMethod = findMethodDirect {
     findMethod {
-        findFirst = true
-        matcher { name("getViewModel") }
-    }.single().returnType!!
+        matcher { strings("premium_destination_play_full_song") }
+    }.single()
 }
 
-val isPremiumUpsellField = findFieldDirect {
-    viewModelClazz().fields.filter { it.typeName == "boolean" }[1]
+val contextMenuItemInterface = findClassDirect {
+    contextMenuPremiumItemResIdMethod().declaredClass!!.interfaces.single()
+}
+
+val contextMenuPremiumItemDataClazz = findClassDirect {
+    contextMenuPremiumItemResIdMethod().returnType!!
+}
+
+val contextMenuPremiumItemResIdField = findFieldDirect {
+    contextMenuPremiumItemDataClazz().fields.single {
+        it.name == "a" && it.typeName == "java.lang.String"
+    }
 }
 
 @SkipTest
@@ -79,7 +88,7 @@ fun structureGetSectionsFingerprint(className: String) = fingerprint {
 }
 
 val homeStructureGetSectionsFingerprint =
-    structureGetSectionsFingerprint("homeapi.proto.HomeStructure")
+    structureGetSectionsFingerprint("casita.v1.resolved.HomeStructure")
 val browseStructureGetSectionsFingerprint =
     structureGetSectionsFingerprint("browsita.v1.resolved.BrowseStructure")
 
