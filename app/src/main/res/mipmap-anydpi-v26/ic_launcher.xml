@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    tools:ignore="MonochromeLauncherIcon">
-    <background android:drawable="@color/ic_launcher_background"/>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The full image spans the entire 108dp canvas edge-to-edge.
+         Background layer is not constrained to the safe zone, so the
+         picture is shown as-is ("no zoom"). Corners of the source image
+         are plain pink, so launcher mask clipping loses no content. -->
+    <background android:drawable="@drawable/ic_launcher_background"/>
     <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+    <!-- Material You / themed icon silhouette for Pixel Launcher (Android 13+) -->
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome"/>
 </adaptive-icon>

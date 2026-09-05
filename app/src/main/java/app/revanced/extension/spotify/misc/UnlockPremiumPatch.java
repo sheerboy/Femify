@@ -82,6 +82,8 @@ public final class UnlockPremiumPatch {
      * response which delivers home sections.
      */
     private static final List<Integer> REMOVED_HOME_SECTIONS = List.of(
+            com.spotify.home.evopage.homeapi.proto.Section.PROMOTION_V1_FIELD_NUMBER,
+            com.spotify.home.evopage.homeapi.proto.Section.PROMOTION_V3_FIELD_NUMBER,
             com.spotify.home.evopage.homeapi.proto.Section.VIDEO_BRAND_AD_FIELD_NUMBER,
             com.spotify.home.evopage.homeapi.proto.Section.IMAGE_BRAND_AD_FIELD_NUMBER
     );

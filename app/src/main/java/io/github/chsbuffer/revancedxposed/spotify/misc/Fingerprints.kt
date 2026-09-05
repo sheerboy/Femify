@@ -57,13 +57,17 @@ val contextMenuViewModelClass = findClassDirect {
 }
 
 val contextMenuPremiumItemResIdMethod = findMethodDirect {
-    findMethod {
-        matcher { strings("premium_destination_play_full_song") }
-    }.single()
+    // The ViewModel ctor reads each item's resId via item.b() (duplicate check).
+    val ctor = contextMenuViewModelClass().methods.first { m ->
+        m.isConstructor && m.paramTypeNames.contains("java.util.List") && m.invokes.any {
+            it.methodName == "b" && it.paramCount == 0
+        }
+    }
+    ctor.invokes.first { it.methodName == "b" && it.paramCount == 0 }
 }
 
 val contextMenuItemInterface = findClassDirect {
-    contextMenuPremiumItemResIdMethod().declaredClass!!.interfaces.single()
+    contextMenuPremiumItemResIdMethod().declaredClass!!
 }
 
 val contextMenuPremiumItemDataClazz = findClassDirect {

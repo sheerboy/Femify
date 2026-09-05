@@ -129,7 +129,7 @@ fun SpotifyHook.UnlockPremium() {
 
 private fun isPremiumUpsellItem(item: Any, itemInterface: Class<*>, resIdField: Field): Boolean {
     if (!itemInterface.isInstance(item)) return false
-    val data = item.callMethodOrNull("c") ?: return false
+    val data = item.callMethodOrNull("b") ?: return false
     val resId = runCatching {
         XposedHelpers.getObjectField(data, resIdField.name) as String
     }.getOrNull() ?: return false
