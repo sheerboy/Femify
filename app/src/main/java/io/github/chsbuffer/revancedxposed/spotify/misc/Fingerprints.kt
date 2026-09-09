@@ -56,28 +56,22 @@ val contextMenuViewModelClass = findClassDirect {
     }.declaredClass!!
 }
 
-val contextMenuPremiumItemResIdMethod = findMethodDirect {
-    // The ViewModel ctor reads each item's resId via item.b() (duplicate check).
+val contextMenuPremiumItemResIdField = findFieldDirect {
+    // The ViewModel ctor reads each item's resId directly from a String field.
     val ctor = contextMenuViewModelClass().methods.first { m ->
-        m.isConstructor && m.paramTypeNames.contains("java.util.List") && m.invokes.any {
-            it.methodName == "b" && it.paramCount == 0
+        m.isConstructor && m.paramTypeNames.contains("java.util.List") && m.usingFields.any {
+            it.usingType == org.luckypray.dexkit.result.FieldUsingType.Read &&
+                it.field.name == "a" && it.field.typeName == "java.lang.String"
         }
     }
-    ctor.invokes.first { it.methodName == "b" && it.paramCount == 0 }
+    ctor.usingFields.first { uf ->
+        uf.usingType == org.luckypray.dexkit.result.FieldUsingType.Read &&
+            uf.field.name == "a" && uf.field.typeName == "java.lang.String"
+    }.field
 }
 
 val contextMenuItemInterface = findClassDirect {
-    contextMenuPremiumItemResIdMethod().declaredClass!!
-}
-
-val contextMenuPremiumItemDataClazz = findClassDirect {
-    contextMenuPremiumItemResIdMethod().returnType!!
-}
-
-val contextMenuPremiumItemResIdField = findFieldDirect {
-    contextMenuPremiumItemDataClazz().fields.single {
-        it.name == "a" && it.typeName == "java.lang.String"
-    }
+    contextMenuPremiumItemResIdField().declaredClass!!
 }
 
 @SkipTest

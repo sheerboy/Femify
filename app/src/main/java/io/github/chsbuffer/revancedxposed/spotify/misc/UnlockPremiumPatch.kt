@@ -6,7 +6,6 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import io.github.chsbuffer.revancedxposed.callMethod
-import io.github.chsbuffer.revancedxposed.callMethodOrNull
 import io.github.chsbuffer.revancedxposed.findField
 import io.github.chsbuffer.revancedxposed.findFirstFieldByExactType
 import io.github.chsbuffer.revancedxposed.spotify.SpotifyHook
@@ -129,9 +128,8 @@ fun SpotifyHook.UnlockPremium() {
 
 private fun isPremiumUpsellItem(item: Any, itemInterface: Class<*>, resIdField: Field): Boolean {
     if (!itemInterface.isInstance(item)) return false
-    val data = item.callMethodOrNull("b") ?: return false
     val resId = runCatching {
-        XposedHelpers.getObjectField(data, resIdField.name) as String
+        XposedHelpers.getObjectField(item, resIdField.name) as String
     }.getOrNull() ?: return false
     return resId.startsWith("premium_destination_")
 }

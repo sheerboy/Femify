@@ -77,28 +77,6 @@ public final class UnlockPremiumPatch {
             new OverrideAttribute("tablet-free", FALSE, false)
     );
 
-    /**
-     * A list of home sections feature types ids which should be removed. These ids match the ones from the protobuf
-     * response which delivers home sections.
-     */
-    private static final List<Integer> REMOVED_HOME_SECTIONS = List.of(
-            com.spotify.home.evopage.homeapi.proto.Section.PROMOTION_V1_FIELD_NUMBER,
-            com.spotify.home.evopage.homeapi.proto.Section.PROMOTION_V3_FIELD_NUMBER,
-            com.spotify.home.evopage.homeapi.proto.Section.VIDEO_BRAND_AD_FIELD_NUMBER,
-            com.spotify.home.evopage.homeapi.proto.Section.IMAGE_BRAND_AD_FIELD_NUMBER
-    );
-
-    /**
-     * A list of browse sections feature types ids which should be removed. These ids match the ones from the protobuf
-     * response which delivers browse sections.
-     */
-    private static final List<Integer> REMOVED_BROWSE_SECTIONS = List.of(
-            com.spotify.browsita.v1.resolved.Section.BRAND_ADS_FIELD_NUMBER
-    );
-
-    /**
-     * Injection point. Override account attributes.
-     */
     public static void overrideAttributes(Map<String, ?> attributes) {
         try {
             for (OverrideAttribute override : PREMIUM_OVERRIDES) {
@@ -168,28 +146,52 @@ public final class UnlockPremiumPatch {
     }
 
     /**
-     * Injection point. Remove ads sections from home.
-     * Depends on patching abstract protobuf list ensureIsMutable method.
+     * Resolve a protobuf FIELD_NUMBER constant from the real section class at runtime.
+     * Hardcoded numbers are not stable across app versions.
+     */
+    private static int getFieldNumber(Class<?> sectionClass, String fieldName) {
+        try {
+            return XposedHelpers.getStaticIntField(sectionClass, fieldName);
+        } catch (Throwable t) {
+            Logger.printException(() -> "Field number " + fieldName + " not found", t);
+            return -1;
+        }
+    }
+
+    /**
+     * Remove ads sections from home.
      */
     public static void removeHomeSections(List<?> sections) {
         Logger.printInfo(() -> "Removing ads section from home");
+        if (sections.isEmpty()) return;
+        Class<?> sectionClass = sections.get(0).getClass();
+        List<Integer> idsToRemove = List.of(
+                getFieldNumber(sectionClass, "PROMOTION_V1_FIELD_NUMBER"),
+                getFieldNumber(sectionClass, "PROMOTION_V3_FIELD_NUMBER"),
+                getFieldNumber(sectionClass, "VIDEO_BRAND_AD_FIELD_NUMBER"),
+                getFieldNumber(sectionClass, "IMAGE_BRAND_AD_FIELD_NUMBER")
+        );
         removeSections(
                 sections,
                 section -> XposedHelpers.getIntField(section, "featureTypeCase_"),
-                REMOVED_HOME_SECTIONS
+                idsToRemove
         );
     }
 
     /**
-     * Injection point. Remove ads sections from browse.
-     * Depends on patching abstract protobuf list ensureIsMutable method.
+     * Remove ads sections from browse.
      */
     public static void removeBrowseSections(List<?> sections) {
         Logger.printInfo(() -> "Removing ads section from browse");
+        if (sections.isEmpty()) return;
+        Class<?> sectionClass = sections.get(0).getClass();
+        List<Integer> idsToRemove = List.of(
+                getFieldNumber(sectionClass, "BRAND_ADS_FIELD_NUMBER")
+        );
         removeSections(
                 sections,
                 section -> XposedHelpers.getIntField(section, "sectionTypeCase_"),
-                REMOVED_BROWSE_SECTIONS
+                idsToRemove
         );
     }
 }
