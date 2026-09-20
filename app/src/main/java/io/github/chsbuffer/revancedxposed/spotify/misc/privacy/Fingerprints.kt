@@ -21,34 +21,3 @@ val shareCopyUrlFingerprint = findMethodDirect {
         }
     }
 }
-
-val formatAndroidShareSheetUrlFingerprint = findMethodDirect {
-    runCatching {
-        findMethod {
-            matcher {
-                returnType("java.lang.String")
-                addUsingNumber('\n'.code)
-                modifiers = Modifier.PUBLIC or Modifier.STATIC
-                paramTypes(null, "java.lang.String")
-            }
-        }.single {
-            // exclude
-            // `(PlayerState, String) -> String` usingNumbers(1, 10); usingStrings("")
-            !it.usingStrings.contains("")
-        }
-    }.getOrElse {
-        findMethod {
-            matcher {
-                returnType("java.lang.String")
-                addUsingNumber('\n'.code)
-                modifiers = Modifier.PUBLIC
-                paramTypes("com.spotify.share.social.sharedata.ShareData", "java.lang.String")
-            }
-        }.single {
-            // exclude
-            // `(PlayerState, String) -> String` usingNumbers(1, 10); usingStrings("")
-            !it.usingStrings.contains("")
-        }
-    }
-
-}
